@@ -8,7 +8,7 @@ handle_sync() {
   bare_repo_dir="/repos/git/$repo_name.git"
 
   # Sync the current state
-  rsync -av --delete --exclude='.git' "$src_dir/" "$work_dir/"
+  rsync -av --delete --exclude='.git' "$(echo "${RSYNC_EXCLUDE}" | sed 's/,/ --exclude=/g' | sed 's/^/--exclude=/')" "$src_dir/" "$work_dir/"
 
   cd "$work_dir" || exit
   git add .
