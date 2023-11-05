@@ -23,10 +23,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Get the version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ghcr.io/windsor-hotel/git-remote-server-mock:${{ github.ref }}
+          tags: ghcr.io/windsor-hotel/git-remote-server-mock:${{ steps.get_version.outputs.VERSION }}
           file: ./Dockerfile
