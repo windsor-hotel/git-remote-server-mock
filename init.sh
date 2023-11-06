@@ -1,5 +1,12 @@
 #!/usr/bin/env sh
 
+# Set default credentials
+GIT_USERNAME=${GIT_USERNAME:-git}
+GIT_PASSWORD=${GIT_PASSWORD:-p@$$w0rd}
+
+# Create .htpasswd file for Nginx
+htpasswd -bc /etc/nginx/.htpasswd "$GIT_USERNAME" "$GIT_PASSWORD"
+
 # Function to handle syncing, committing, and pushing for a given repository
 handle_sync() {
   repo_name="$1"
@@ -8,25 +15,25 @@ handle_sync() {
   bare_repo_dir="/repos/git/$repo_name.git"
 
   # Sync the current state
-  rsync -av --delete --exclude='.git' "$(echo "${RSYNC_EXCLUDE}" | sed 's/,/ --exclude=/g' | sed 's/^/--exclude=/')" "$src_dir/" "$work_dir/"
+  rsync -av --delete --exclude='.git' "$src_dir/" "$work_dir/"
 
   cd "$work_dir" || exit
   git add .
 
   # Check if there are any changes to commit
   if ! git diff-index --quiet HEAD --; then
-    # Commit and push the changes
+    # Commit, pull and push the changes
     timestamp=$(date "+%Y-%m-%d %H:%M:%S")
     git commit -m "Autocommit: $timestamp"
+    if git remote | grep -q origin; then
+      git pull origin main --rebase
+    else
+      git remote add origin "file://$bare_repo_dir"
+      git pull origin main --rebase
+    fi
     git push "file://$bare_repo_dir" HEAD:refs/heads/main
   fi
 }
-
-# Create the necessary directories if they don't exist
-mkdir -p /repos/git /repos/serve /repos/mount
-
-# Use 'main' as the default branch
-git config --global init.defaultBranch main
 
 # Initial setup for all repositories
 for dir in /repos/mount/*; do
@@ -64,13 +71,33 @@ for dir in /repos/mount/*; do
   git push "file:///repos/git/$repo_name.git" HEAD:refs/heads/main
 done
 
+# Start fcgiwrap to handle CGI for Nginx
+fcgiwrap -s unix:/var/run/fcgiwrap.socket &
+
+# Wait for the fcgiwrap socket to be available
+while [ ! -S /var/run/fcgiwrap.socket ]; do
+  sleep 0.1
+done
+
+# Adjust ownership and permissions for the fcgiwrap socket
+chown nginx:nginx /var/run/fcgiwrap.socket
+chmod 0660 /var/run/fcgiwrap.socket
+
+# Adjust ownership and permissions for .htpasswd
+chown nginx:nginx /etc/nginx/.htpasswd
+chmod 0660 /etc/nginx/.htpasswd
+
+# Change ownership of /repos/git to nginx user and group
+chown -R nginx:nginx /repos/git
+chmod -R u+rwX,go+rX,go-w /repos/git
+
+# Start Nginx
+nginx
+
 # Monitor for changes and handle them as they occur
 while inotifywait -r -e modify,create,delete,move /repos/mount; do
   for dir in /repos/mount/*; do
     repo_name=$(basename "$dir")
     handle_sync "$repo_name"
   done
-done &
-
-# Run the git daemon
-exec git daemon --reuseaddr --base-path=/repos/git --export-all --enable=receive-pack --verbose
+done

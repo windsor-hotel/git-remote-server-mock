@@ -6,6 +6,9 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "9418:9418"
+      - "8888:80"
+    environment:
+      - GIT_USERNAME=dev
+      - GIT_PASSWORD=dev
     volumes:
       - ./:/repos/mount/git-remote-server-mock
