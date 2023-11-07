@@ -2,7 +2,7 @@
 FROM alpine:3.18.4
 
 # Install git, git-daemon, rsync, openssh, and nginx
-RUN apk update && apk add --no-cache git git-daemon rsync inotify-tools nginx fcgiwrap apache2-utils
+RUN apk update && apk add --no-cache bash git git-daemon rsync inotify-tools nginx fcgiwrap apache2-utils
 
 # Copy the init script into the image
 COPY init.sh /init.sh

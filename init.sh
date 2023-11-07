@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 # Set default credentials
 GIT_USERNAME=${GIT_USERNAME:-git}
@@ -6,6 +6,15 @@ GIT_PASSWORD=${GIT_PASSWORD:-p@$$w0rd}
 
 # Create .htpasswd file for Nginx
 htpasswd -bc /etc/nginx/.htpasswd "$GIT_USERNAME" "$GIT_PASSWORD"
+
+# Always exclude .git and expand other excludes from RSYNC_EXCLUDE variable
+exclude_args=('--exclude=.git')
+if [ -n "$RSYNC_EXCLUDE" ]; then
+  IFS=',' read -ra EXCLUDES <<< "$RSYNC_EXCLUDE"
+  for exclude in "${EXCLUDES[@]}"; do
+    exclude_args+=("--exclude=$exclude")
+  done
+fi
 
 # Function to handle syncing, committing, and pushing for a given repository
 handle_sync() {
@@ -15,7 +24,7 @@ handle_sync() {
   bare_repo_dir="/repos/git/$repo_name.git"
 
   # Sync the current state
-  rsync -av --delete --exclude='.git' "$src_dir/" "$work_dir/"
+  rsync -av --delete "${exclude_args[@]}" "$src_dir/" "$work_dir/"
 
   cd "$work_dir" || exit
   git add .
@@ -56,7 +65,7 @@ for dir in /repos/mount/*; do
   git config user.email "auto-commit@localhost"
 
   # Copy the contents of the current directory to the new non-bare repository, excluding the .git directory
-  rsync -av --exclude='.git' "$dir/" .
+  rsync -av "${exclude_args[@]}" "$dir/" .
 
   # Add the contents to the git repository
   git add .
