@@ -30,4 +30,3 @@ a new commit is created and pushed to the repository. This is not reflected back
 operator points to this repository, it will see the changes and apply them each time you save a file.
 
 You can pull this image from the Docker package registry by running `git pull ghcr.io/windsor-hotel/git-remote-server-mock:v0.1.2`
-

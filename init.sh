@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+set -eou pipefail
+
+RSYNC_EXCLUDE=${RSYNC_EXCLUDE:-}
 
 # Set default credentials
 GIT_USERNAME=${GIT_USERNAME:-git}
@@ -80,18 +83,6 @@ for dir in /repos/mount/*; do
   git push "file:///repos/git/$repo_name.git" HEAD:refs/heads/main
 done
 
-# Start fcgiwrap to handle CGI for Nginx
-fcgiwrap -s unix:/var/run/fcgiwrap.socket &
-
-# Wait for the fcgiwrap socket to be available
-while [ ! -S /var/run/fcgiwrap.socket ]; do
-  sleep 0.1
-done
-
-# Adjust ownership and permissions for the fcgiwrap socket
-chown nginx:nginx /var/run/fcgiwrap.socket
-chmod 0660 /var/run/fcgiwrap.socket
-
 # Adjust ownership and permissions for .htpasswd
 chown nginx:nginx /etc/nginx/.htpasswd
 chmod 0660 /etc/nginx/.htpasswd
@@ -99,9 +90,6 @@ chmod 0660 /etc/nginx/.htpasswd
 # Change ownership of /repos/git to nginx user and group
 chown -R nginx:nginx /repos/git
 chmod -R u+rwX,go+rX,go-w /repos/git
-
-# Start Nginx
-nginx
 
 # Monitor for changes and handle them as they occur
 while inotifywait -r -e modify,create,delete,move /repos/mount; do
