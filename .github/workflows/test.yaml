@@ -1,0 +1,25 @@
+name: Test Docker image
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: ghcr.io/windsor-hotel/git-remote-server-mock:latest
+          file: ./Dockerfile
+
+      - name: Run docker-compose
+        run: |
+          docker-compose up -d
+          docker-compose logs git-server
