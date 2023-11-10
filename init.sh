@@ -10,6 +10,10 @@ GIT_PASSWORD=${GIT_PASSWORD:-p@$$w0rd}
 # Create .htpasswd file for Nginx
 htpasswd -bc /etc/nginx/.htpasswd "$GIT_USERNAME" "$GIT_PASSWORD"
 
+# Adjust ownership and permissions for .htpasswd
+chown nginx:nginx /etc/nginx/.htpasswd
+chmod 0660 /etc/nginx/.htpasswd
+
 # Always exclude .git and expand other excludes from RSYNC_EXCLUDE variable
 exclude_args=('--exclude=.git')
 if [ -n "$RSYNC_EXCLUDE" ]; then
@@ -18,34 +22,6 @@ if [ -n "$RSYNC_EXCLUDE" ]; then
     exclude_args+=("--exclude=$exclude")
   done
 fi
-
-# Function to handle syncing, committing, and pushing for a given repository
-handle_sync() {
-  repo_name="$1"
-  src_dir="/repos/mount/$repo_name"
-  work_dir="/repos/serve/$repo_name"
-  bare_repo_dir="/repos/git/$repo_name.git"
-
-  # Sync the current state
-  rsync -av --delete "${exclude_args[@]}" "$src_dir/" "$work_dir/"
-
-  cd "$work_dir" || exit
-  git add .
-
-  # Check if there are any changes to commit
-  if ! git diff-index --quiet HEAD --; then
-    # Commit, pull and push the changes
-    timestamp=$(date "+%Y-%m-%d %H:%M:%S")
-    git commit -m "Autocommit: $timestamp"
-    if git remote | grep -q origin; then
-      git pull origin main --rebase
-    else
-      git remote add origin "file://$bare_repo_dir"
-      git pull origin main --rebase
-    fi
-    git push "file://$bare_repo_dir" HEAD:refs/heads/main
-  fi
-}
 
 # Initial setup for all repositories
 for dir in /repos/mount/*; do
@@ -83,18 +59,9 @@ for dir in /repos/mount/*; do
   git push "file:///repos/git/$repo_name.git" HEAD:refs/heads/main
 done
 
-# Adjust ownership and permissions for .htpasswd
-chown nginx:nginx /etc/nginx/.htpasswd
-chmod 0660 /etc/nginx/.htpasswd
-
 # Change ownership of /repos/git to nginx user and group
 chown -R nginx:nginx /repos/git
 chmod -R u+rwX,go+rX,go-w /repos/git
 
-# Monitor for changes and handle them as they occur
-while inotifywait -r -e modify,create,delete,move /repos/mount; do
-  for dir in /repos/mount/*; do
-    repo_name=$(basename "$dir")
-    handle_sync "$repo_name"
-  done
-done
+# Start supervisord
+/usr/bin/supervisord -c /etc/supervisord.conf

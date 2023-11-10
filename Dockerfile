@@ -7,6 +7,7 @@ RUN apk update && apk add --no-cache bash git git-daemon rsync \
 
 # Copy the init script and supervisord configuration into the image
 COPY init.sh /init.sh
+COPY sync.sh /sync.sh
 COPY fcgiwrap.sh /fcgiwrap.sh
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY supervisord.conf /etc/supervisord.conf
@@ -22,4 +23,4 @@ RUN ln -sf /dev/stdout /var/log/nginx/access.log \
     && ln -sf /dev/stderr /var/log/nginx/error.log
 
 # Set the supervisord as the command to run when the container starts
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+CMD ["/init.sh"]
