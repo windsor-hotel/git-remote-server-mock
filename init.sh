@@ -36,6 +36,9 @@ for dir in /repos/mount/*; do
   # Change to the new non-bare repository directory
   cd "/repos/serve/$repo_name" || exit
 
+  # Set safe directory
+  git config --global --add safe.directory "/repos/serve/$repo_name"
+
   # Initialize a new non-bare repository
   git init
 

@@ -1,0 +1,17 @@
+name: Test Docker image
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run docker-compose
+        run: |
+          docker-compose up -d
+          docker-compose logs git-server
