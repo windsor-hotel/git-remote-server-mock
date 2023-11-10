@@ -15,4 +15,5 @@ jobs:
         run: |
           docker-compose up -d
           docker-compose logs git-server
+          sleep 60
           docker-compose exec git-server ls -lah repos/serve
