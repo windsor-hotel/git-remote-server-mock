@@ -11,15 +11,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: false
-          tags: ghcr.io/windsor-hotel/git-remote-server-mock:latest
-          file: ./Dockerfile
-
       - name: Run docker-compose
         run: |
+          docker-compose build
           docker-compose up -d
           docker-compose exec git-server ls -lah repos/serve
