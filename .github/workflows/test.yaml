@@ -22,4 +22,4 @@ jobs:
       - name: Run docker-compose
         run: |
           docker-compose up -d
-          docker-compose exec -it git-server ls -lah /repos/serve/
+          docker-compose exec git-server ls -lah repos/serve
