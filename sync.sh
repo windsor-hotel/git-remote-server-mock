@@ -19,10 +19,18 @@ handle_sync() {
   work_dir="/repos/serve/$repo_name"
   bare_repo_dir="/repos/git/$repo_name.git"
 
+  cd "$work_dir" || exit
+
+  # Ensure the local repository tracks the remote repository
+  git remote add origin "file://$bare_repo_dir" || true
+  git fetch origin
+
+  # Reset the local state to match the remote
+  git reset --hard origin/main
+
   # Sync the current state
   rsync -av --delete "${exclude_args[@]}" "$src_dir/" "$work_dir/"
 
-  cd "$work_dir" || exit
   git add .
 
   # Check if there are any changes to commit
