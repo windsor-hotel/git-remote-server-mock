@@ -34,3 +34,4 @@ jobs:
           push: true
           tags: ghcr.io/windsor-hotel/git-remote-server-mock:${{ steps.get_version.outputs.VERSION }}
           file: ./Dockerfile
+          platforms: linux/amd64,linux/arm64
