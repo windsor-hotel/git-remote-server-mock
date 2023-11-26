@@ -3,7 +3,7 @@ FROM alpine:3.18.4
 
 # Install git, git-daemon, rsync, openssh, nginx, and supervisor
 RUN apk update && apk add --no-cache bash git git-daemon rsync \
-    inotify-tools nginx fcgiwrap apache2-utils supervisor
+    inotify-tools nginx fcgiwrap apache2-utils supervisor openssh-client
 
 # Copy the init script and supervisord configuration into the image
 COPY init.sh /init.sh

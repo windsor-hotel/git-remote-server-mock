@@ -12,7 +12,8 @@ build_exclude_args() {
       exclude_args+=("--exclude=$exclude")
     done
   fi
-  echo "${exclude_args[@]}"
+  local IFS=' ' # Set IFS to space for joining the array
+  echo "${exclude_args[*]}" # Echo the arguments separated by spaces
 }
 
 # Function to handle syncing, committing, and pushing for a given repository
@@ -26,19 +27,16 @@ handle_sync() {
 
   cd "$work_dir" || return
 
-  # Check if remote 'origin' exists, add if not
-  if ! git remote | grep -q origin; then
-    git remote add origin "file://$bare_repo_dir"
-  fi
+  git remote set-url origin "file://$bare_repo_dir"
 
   # Fetch changes from the bare repository
-  git fetch origin
+  GIT_TRACE=1 git fetch origin
 
   # Reset to the latest state of 'origin/main'
   git reset --hard origin/main
 
   # Sync the current state
-  rsync -av --delete "${exclude_args[@]}" "$src_dir/" "$work_dir/"
+  rsync -av --delete $exclude_args "$src_dir/" "$work_dir/"
 
   # Stage changes
   git add .

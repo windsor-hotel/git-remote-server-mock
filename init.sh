@@ -14,6 +14,10 @@ htpasswd -bc /etc/nginx/.htpasswd "$GIT_USERNAME" "$GIT_PASSWORD"
 chown nginx:nginx /etc/nginx/.htpasswd
 chmod 0660 /etc/nginx/.htpasswd
 
+# Set the user identity for making commits
+git config --global user.name "Auto-commit"
+git config --global user.email "auto-commit@localhost"
+
 # Always exclude .git and expand other excludes from RSYNC_EXCLUDE variable
 exclude_args=('--exclude=.git')
 if [ -n "$RSYNC_EXCLUDE" ]; then
@@ -42,9 +46,8 @@ for dir in /repos/mount/*; do
   # Initialize a new non-bare repository
   git init
 
-  # Set the user identity for making commits
-  git config user.name "Auto-commit"
-  git config user.email "auto-commit@localhost"
+  # Add the bare repository as a remote named 'origin'
+  git remote add origin "file:///repos/git/$repo_name.git"
 
   # Copy the contents of the current directory to the new non-bare repository, excluding the .git directory
   rsync -av "${exclude_args[@]}" "$dir/" .
