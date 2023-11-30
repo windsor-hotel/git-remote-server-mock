@@ -9,7 +9,22 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+
+      - name: Cache asdf tools
+        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84 # v3.3.2
+        with:
+          path: ~/.asdf
+          key: ${{ runner.os }}-asdf-${{ env.hash }}
+          restore-keys: |
+            ${{ runner.os }}-asdf-
+
+      - name: Install asdf
+        uses: asdf-vm/actions/plugins-add@05e0d2ed97b598bfce82fd30daf324ae0c4570e6 # v3.0.2
+
+      - name: Install asdf ci tools
+        run: |
+          asdf install
 
       - name: Run docker-compose
         run: |

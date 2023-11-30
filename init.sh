@@ -49,20 +49,21 @@ for dir in /repos/mount/*; do
   # Add the bare repository as a remote named 'origin'
   git remote add origin "file:///repos/git/$repo_name.git"
 
-  # Copy the contents of the current directory to the new non-bare repository, excluding the .git directory
+  # Sync files from mount to serve
   rsync -av "${exclude_args[@]}" "$dir/" .
 
-  # Add the contents to the git repository
-  git add .
+  # Check if there are files to commit
+  if [ -n "$(git status --porcelain)" ]; then
+    git add .
+    git commit -m 'Initial commit'
+    git branch -m main
+  else
+    echo "No files to commit in $repo_name"
+    continue # Skip to the next repository if there are no files to commit
+  fi
 
-  # Commit the contents to the git repository
-  git commit -m 'Initial commit'
-
-  # Create a new branch named 'main' and switch to it
-  git branch -m main
-
-  # Push the contents to the bare repository
-  git push "file:///repos/git/$repo_name.git" HEAD:refs/heads/main
+  # Push the initial commit to the bare repository
+  git push -u origin main
 done
 
 # Change ownership of /repos/git to nginx user and group

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eou pipefail
+set -eoux pipefail
 
 RSYNC_EXCLUDE=${RSYNC_EXCLUDE:-}
 
@@ -28,33 +28,45 @@ handle_sync() {
   cd "$work_dir" || return
 
   git remote set-url origin "file://$bare_repo_dir"
-
-  # Fetch changes from the bare repository
-  GIT_TRACE=1 git fetch origin
+  git fetch origin
 
   # Reset to the latest state of 'origin/main'
   git reset --hard origin/main
 
   # Sync the current state
-  rsync -av --delete $exclude_args "$src_dir/" "$work_dir/"
+  rsync -av --delete "$exclude_args" "$src_dir/" "$work_dir/"
 
   # Stage changes
   git add .
 
   # Check if there are any changes to commit
-  if ! git diff-index --quiet HEAD --; then
+  if ! git diff --quiet --cached; then
     # Commit and rebase with the latest changes
     timestamp=$(date "+%Y-%m-%d %H:%M:%S")
     git commit -m "Autocommit: $timestamp"
+
+    # Pull and rebase changes from the remote repository
     git pull --rebase origin main
+
+    # Push changes to the remote repository
     git push origin main
   fi
 }
 
-# Monitor for changes and handle them as they occur
-while inotifywait -r -e modify,create,delete,move /repos/mount; do
+# Monitoring and syncing loop for changes other than deletions
+while inotifywait -r -e modify,create,move /repos/mount; do
   for dir in /repos/mount/*; do
     repo_name=$(basename "$dir")
     handle_sync "$repo_name"
   done
-done
+done &
+
+# Deletion tracking loop
+while read -r path action file; do
+  if [ "$action" = "DELETE" ]; then
+    # Construct the full path of the deleted file
+    full_src_path="$path$file"
+    apply_deletion "$full_src_path" "/repos/serve"
+  fi
+done < <(inotifywait -m -r -e delete --format '%w %e %f' /repos/mount)
+

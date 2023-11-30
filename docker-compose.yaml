@@ -8,7 +8,8 @@ services:
     ports:
       - "8888:80"
     environment:
-      - GIT_USERNAME=dev
-      - GIT_PASSWORD=dev
+      - GIT_USERNAME=local
+      - GIT_PASSWORD=local
+      - RSYNC_EXCLUDE=dontsync
     volumes:
-      - ./:/repos/mount/git-remote-server-mock
+      - ./test/sample:/repos/mount/sample
