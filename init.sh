@@ -52,17 +52,10 @@ for dir in /repos/mount/*; do
   # Sync files from mount to serve
   rsync -av "${exclude_args[@]}" "$dir/" .
 
-  # Check if there are files to commit
-  if [ -n "$(git status --porcelain)" ]; then
-    git add .
-    git commit -m 'Initial commit'
-    git branch -m main
-  else
-    echo "No files to commit in $repo_name"
-    continue # Skip to the next repository if there are no files to commit
-  fi
-
   # Push the initial commit to the bare repository
+  git add .
+  git commit -m 'Initial commit'
+  git branch -m main
   git push -u origin main
 done
 

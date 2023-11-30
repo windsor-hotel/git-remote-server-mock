@@ -34,7 +34,8 @@ handle_sync() {
   git reset --hard origin/main
 
   # Sync the current state
-  rsync -av --delete "$exclude_args" "$src_dir/" "$work_dir/"
+  # shellcheck disable=SC2086
+  rsync -av --delete $exclude_args "$src_dir/" "$work_dir/"
 
   # Stage changes
   git add .
