@@ -2,13 +2,16 @@ version: '3.1'
 
 services:
   git-server:
+    container_name: git-server
     build:
       context: .
       dockerfile: Dockerfile
     ports:
       - "8888:80"
     environment:
-      - GIT_USERNAME=dev
-      - GIT_PASSWORD=dev
+      - GIT_USERNAME=local
+      - GIT_PASSWORD=local
+      - RSYNC_EXCLUDE=excluded_file.txt
+      - RSYNC_PROTECT=flux-sync
     volumes:
-      - ./:/repos/mount/git-remote-server-mock
+      - ./test/sample:/repos/mount/sample
