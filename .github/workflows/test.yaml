@@ -26,7 +26,6 @@ jobs:
         run: |
           asdf install
 
-      - name: Run docker-compose
+      - name: Run tests
         run: |
-          docker-compose up -d
-          docker-compose logs git-server
+          bats test

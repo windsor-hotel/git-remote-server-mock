@@ -2,6 +2,7 @@ version: '3.1'
 
 services:
   git-server:
+    container_name: git-server
     build:
       context: .
       dockerfile: Dockerfile
@@ -10,6 +11,7 @@ services:
     environment:
       - GIT_USERNAME=local
       - GIT_PASSWORD=local
-      - RSYNC_EXCLUDE=dontsync
+      - RSYNC_EXCLUDE=excluded_file.txt
+      - RSYNC_PROTECT=flux-sync
     volumes:
       - ./test/sample:/repos/mount/sample
