@@ -9,7 +9,7 @@ setup_file() {
 
   export GIT_SERVER_HOST="localhost"
   export GIT_SERVER_PORT="8888"
-  export GIT_REPOSITORY_URL="http://${GIT_SERVER_HOST}:${GIT_SERVER_PORT}/git/sample.git"
+  export GIT_REPOSITORY_URL="http://local:local@${GIT_SERVER_HOST}:${GIT_SERVER_PORT}/git/sample.git"
   export TEMP_CLONE_DIR="./test/tmp_clone"
 
   # Create temporary directory for cloning
@@ -91,7 +91,7 @@ teardown_file() {
   rm -rf "$MOUNTED_FOLDER"/git_added_file.txt
   rm -rf "$MOUNTED_FOLDER"/excluded_file.txt
   rm -rf "$MOUNTED_FOLDER"/new_file.txt
-  rm -rf "$MOUNTED_FOLDER"/tmp_clone
+  rm -rf ./test/tmp_clone
 
   docker-compose down
 }
